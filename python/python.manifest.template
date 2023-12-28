@@ -1,0 +1,51 @@
+loader.entrypoint = "file:{{ gramine.libos }}"
+libos.entrypoint = "{{ entrypoint }}"
+loader.log_level = "{{ log_level }}"
+
+loader.env.LD_LIBRARY_PATH = "/lib:/usr/lib:{{ arch_libdir }}:/usr/{{ arch_libdir }}"
+loader.env.PYTHONPATH = "/usr/local/lib/python3.10/site-packages"
+loader.env.PYTHONDONTWRITEBYTECODE = "1"
+loader.env.PYTHONPYCACHEPREFIX = "/tmp"
+loader.env.PYTHONUNBUFFERED = "1"
+loader.env.HOME = "/root"
+
+loader.argv_src_file = "file:scripts/args"
+
+sys.enable_sigterm_injection = true
+sys.enable_extra_runtime_domain_names_conf = true
+sys.disallow_subprocesses = true
+
+fs.mounts = [
+  { path = "/lib", uri = "file:{{ gramine.runtimedir() }}" },
+  { path = "{{ arch_libdir }}", uri = "file:{{ arch_libdir }}" },
+  { path = "/usr/{{ arch_libdir }}", uri = "file:/usr/{{ arch_libdir }}" },
+  { path = "{{ entrypoint }}", uri = "file:{{ entrypoint }}" },
+  { path = "{{ python.stdlib }}", uri = "file:{{ python.stdlib }}" },
+  { path = "/usr/local/lib/python3.10", uri = "file:/opt/venv/lib/python3.10" },
+  { path = "/tmp", type = "tmpfs" }
+]
+
+sgx.debug = true
+sgx.remote_attestation = "dcap"
+sgx.enclave_size = "{{ enclave_size }}"
+sgx.edmm_enable = {{ 'true' if env.get('EDMM', '0') == '1' else 'false' }}
+sgx.max_threads = {{ '1' if env.get('EDMM', '0') == '1' else '32' }}
+sgx.isvprodid = 1
+sgx.isvsvn = 10
+
+sgx.trusted_files = [
+  "file:{{ entrypoint }}",
+  "file:{{ gramine.libos }}",
+  "file:{{ gramine.runtimedir() }}/",
+  "file:{{ arch_libdir }}/",
+  "file:/usr/{{ arch_libdir }}/",
+  "file:{{ python.stdlib }}/",
+  "file:/opt/venv/lib/python3.10/",
+  "file:/etc/localtime",
+  "file:/etc/mime.types",
+  "file:/usr/share/zoneinfo/UTC",
+  "file:scripts/main.py",
+  "file:scripts/args",
+  "file:scripts/key.pem",
+  "file:scripts/cert.pem",
+]
