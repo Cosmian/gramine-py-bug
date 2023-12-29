@@ -13,9 +13,7 @@ OSError: [Errno 107] Transport endpoint is not connected
 During handling of the above exception, another exception occurred:
 
 Traceback (most recent call last):
-  File "//scripts/main.py", line 83, in <module>
-    serve("127.0.0.1", 4433, 30, cert_path, key_path)
-  File "//scripts/main.py", line 48, in serve
+  File "//scripts/main.py", line 42, in <module>
     httpd.socket = ctx.wrap_socket(httpd.socket, server_side=True)
   File "/usr/lib/python3.10/ssl.py", line 513, in wrap_socket
     return self.sslsocket_class._create(
