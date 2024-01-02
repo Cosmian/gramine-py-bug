@@ -26,10 +26,43 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     wget && \
     rm -rf /var/lib/apt/lists/*
 
-# Gramine APT repository
-RUN curl -fsSLo /usr/share/keyrings/gramine-keyring.gpg https://packages.gramineproject.io/gramine-keyring.gpg && \
-    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/gramine-keyring.gpg] https://packages.gramineproject.io/ 1.5 main" \
-    | tee /etc/apt/sources.list.d/gramine.list
+# # Gramine APT repository
+# RUN curl -fsSLo /usr/share/keyrings/gramine-keyring.gpg https://packages.gramineproject.io/gramine-keyring.gpg && \
+#     echo "deb [arch=amd64 signed-by=/usr/share/keyrings/gramine-keyring.gpg] https://packages.gramineproject.io/ 1.5 main" \
+#     | tee /etc/apt/sources.list.d/gramine.list
+
+#
+# Gramine compilation from source
+#
+ENV KERNEL_VERSION 6.2.0-39-generic
+
+RUN apt-get update && apt-get install -y \
+    linux-headers-$KERNEL_VERSION \
+    autoconf \
+    bison \
+    gawk \
+    nasm \
+    ninja-build \
+    meson \
+    python3-click \
+    python3-jinja2 \
+    python3-pyelftools \
+    python3-tomli \
+    python3-tomli-w \
+    libprotobuf-c-dev \
+    protobuf-c-compiler \
+    protobuf-compiler \
+    python3-cryptography \
+    python3-protobuf && \
+    rm -rf /var/lib/apt/lists/*
+RUN git clone https://github.com/gramineproject/gramine
+RUN cd gramine/ && git checkout 0bea67b7b7c00ce351d8f308268c6a6979996d8c && \
+    meson setup build/ --buildtype=release \
+        -Ddirect=enabled \
+        -Dsgx=enabled \
+        -Dsgx_driver_include_path=/usr/src/linux-headers-$KERNEL_VERSION/arch/x86/include/uapi && \
+    ninja -C build/ && \
+    ninja -C build/ install
 
 # Intel SGX APT repository
 RUN curl -fsSLo /usr/share/keyrings/intel-sgx-deb.asc https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key && \
@@ -48,7 +81,9 @@ RUN apt-get update && apt-get install -y \
     libsgx-dcap-default-qpl \
     sgx-aesm-service \
     libsgx-aesm-quote-ex-plugin \
-    gramine && \
+    # remove temporarly
+    # gramine && \
+    && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/intel
